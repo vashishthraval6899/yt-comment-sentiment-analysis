@@ -40,6 +40,10 @@ IS_CI = os.getenv("CI", "false").lower() == "true"
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+@app.before_request
+def log_every_request():
+    app.logger.warning(f"🔴 INCOMING REQUEST: {request.method} {request.path}")
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"}), 200
@@ -134,7 +138,7 @@ def home():
 def predict_with_timestamps():
     data = request.json
     print("🔵 RAW REQUEST FROM CLIENT:", data)  # 👈 ADD THIS LINE
-    
+
     comments_data = data.get('comments')
     
     if not comments_data:
