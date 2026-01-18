@@ -100,3 +100,7 @@ mlflow.db
 # Generated artifacts
 *.png
 *.jpg
+
+# Allow bundled inference models
+!flask_app/models/*.pkl
+!flask_app/models/*.joblib
