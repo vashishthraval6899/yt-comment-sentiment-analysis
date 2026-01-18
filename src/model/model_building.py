@@ -74,7 +74,7 @@ def apply_tfidf(train_data: pd.DataFrame, max_features: int, ngram_range: tuple)
         logger.debug(f"TF-IDF transformation complete. Train shape: {X_train_tfidf.shape}")
 
         # Save the vectorizer in the root directory
-        with open(os.path.join(get_root_directory(), 'tfidf_vectorizer.pkl'), 'wb') as f:
+        with open(os.path.join(get_root_directory(), 'tfidf_vectorizer_3000.pkl'), 'wb') as f:
             pickle.dump(vectorizer, f)
 
         logger.debug('TF-IDF applied with trigrams and data transformed')
@@ -148,7 +148,7 @@ def main():
         best_model = train_lgbm(X_train_tfidf, y_train, learning_rate, max_depth, n_estimators)
 
         # Save the trained model in the root directory
-        save_model(best_model, os.path.join(root_dir, 'lgbm_model.pkl'))
+        save_model(best_model, os.path.join(root_dir, 'lgbm_model_V1.pkl'))
 
     except Exception as e:
         logger.error('Failed to complete the feature engineering and model building process: %s', e)

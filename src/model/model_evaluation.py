@@ -127,9 +127,9 @@ def save_model_info(run_id: str, model_path: str, file_path: str) -> None:
 
 
 def main():
-    mlflow.set_tracking_uri("http://13.48.25.113:5000/")
+    mlflow.set_tracking_uri("http://127.0.0.1:5001")
 
-    mlflow.set_experiment('dvc-pipeline-runs')
+    mlflow.set_experiment('dvc-pipeline-runs-v2')
     
     with mlflow.start_run() as run:
         try:
@@ -142,8 +142,8 @@ def main():
                 mlflow.log_param(key, value)
             
             # Load model and vectorizer
-            model = load_model(os.path.join(root_dir, 'lgbm_model.pkl'))
-            vectorizer = load_vectorizer(os.path.join(root_dir, 'tfidf_vectorizer.pkl'))
+            model = load_model(os.path.join(root_dir, 'lgbm_model_V1.pkl'))
+            vectorizer = load_vectorizer(os.path.join(root_dir, 'tfidf_vectorizer_3000.pkl'))
 
             # Load test data for signature inference
             test_data = load_data(os.path.join(root_dir, 'data/interim/test_processed.csv'))
@@ -161,17 +161,17 @@ def main():
             # Log model with signature
             mlflow.sklearn.log_model(
                 model,
-                "lgbm_model",
+                "lgbm_model_V1",
                 signature=signature,  # <--- Added for signature
                 input_example=input_example  # <--- Added input example
             )
 
             # Save model info
-            model_path = "lgbm_model"
+            model_path = "lgbm_model_V1"
             save_model_info(run.info.run_id, model_path, 'experiment_info.json')
 
             # Log the vectorizer as an artifact
-            mlflow.log_artifact(os.path.join(root_dir, 'tfidf_vectorizer.pkl'))
+            mlflow.log_artifact(os.path.join(root_dir, 'tfidf_vectorizer_3000.pkl'))
 
             # Evaluate model and get metrics
             report, cm = evaluate_model(model, X_test_tfidf, y_test)

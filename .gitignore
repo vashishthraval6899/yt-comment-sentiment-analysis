@@ -89,3 +89,14 @@ target/
 .mypy_cache/
 /lgbm_model.pkl
 /tfidf_vectorizer.pkl
+/experiment_info.json
+/lgbm_model_V1.pkl
+/tfidf_vectorizer_3000.pkl
+
+# MLflow
+mlruns/
+mlflow.db
+
+# Generated artifacts
+*.png
+*.jpg
