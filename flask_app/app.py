@@ -1,5 +1,4 @@
 # app.py
-
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend before importing pyplot
 
@@ -7,6 +6,12 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import io
 import os
+import sys
+
+# Add project root to Python path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PROJECT_ROOT)
+
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import mlflow
@@ -20,6 +25,11 @@ from nltk.stem import WordNetLemmatizer
 from mlflow.tracking import MlflowClient
 import mlflow.sklearn
 import matplotlib.dates as mdates
+
+
+
+# ... other imports ...
+from monitoring.log_production_data import log_texts
 
 #Cloud machines do not have NLTK data.
 nltk.download('stopwords')
@@ -88,17 +98,30 @@ vectorizer = None  # Update paths and versions as needed
 def get_model_and_vectorizer():
     global model, vectorizer
 
-    if model is None or vectorizer is None:
-        if IS_CI:
-            raise RuntimeError("Model loading skipped in CI environment")
+    if model is not None and vectorizer is not None:
+        return model, vectorizer
 
-        model_name = "lgbm_model_V1"
-        model_version = "1"
-        vectorizer_path = "./tfidf_vectorizer_3000.pkl"
+    # 1️⃣ Try loading bundled model (PRODUCTION / RENDER)
+    bundled_model_path = "flask_app/models/model.pkl"
+    bundled_vectorizer_path = "flask_app/models/vectorizer.pkl"
 
-        model, vectorizer = load_model_and_vectorizer(
-            model_name, model_version, vectorizer_path
-        )
+    if os.path.exists(bundled_model_path) and os.path.exists(bundled_vectorizer_path):
+        model = joblib.load(bundled_model_path)
+        vectorizer = joblib.load(bundled_vectorizer_path)
+        return model, vectorizer
+
+    # 2️⃣ CI should never load models
+    if IS_CI:
+        raise RuntimeError("Model loading skipped in CI environment")
+
+    # 3️⃣ Fallback to MLflow (LOCAL ONLY)
+    model_name = "lgbm_model_V1"
+    model_version = "1"
+    vectorizer_path = "./tfidf_vectorizer_3000.pkl"
+
+    model, vectorizer = load_model_and_vectorizer(
+        model_name, model_version, vectorizer_path
+    )
 
     return model, vectorizer
 
@@ -121,6 +144,7 @@ def predict_with_timestamps():
 
         # Preprocess
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
+        log_texts(preprocessed_comments)
         
         # Transform
         model, vectorizer = get_model_and_vectorizer()
@@ -150,6 +174,7 @@ def predict():
 
     try:
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
+        log_texts(preprocessed_comments)
         
         model, vectorizer = get_model_and_vectorizer()
         transformed_comments = vectorizer.transform(preprocessed_comments)
