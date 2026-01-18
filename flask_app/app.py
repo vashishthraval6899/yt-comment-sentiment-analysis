@@ -133,6 +133,8 @@ def home():
 @app.route('/predict_with_timestamps', methods=['POST'])
 def predict_with_timestamps():
     data = request.json
+    print("🔵 RAW REQUEST FROM CLIENT:", data)  # 👈 ADD THIS LINE
+    
     comments_data = data.get('comments')
     
     if not comments_data:
