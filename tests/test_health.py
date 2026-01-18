@@ -1,0 +1,14 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath("flask_app"))
+
+from app import app
+
+
+def test_health_endpoint():
+    client = app.test_client()
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json["status"] == "ok"
