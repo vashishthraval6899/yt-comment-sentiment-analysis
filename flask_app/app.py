@@ -25,6 +25,8 @@ import matplotlib.dates as mdates
 nltk.download('stopwords')
 nltk.download('wordnet')
 
+IS_CI = os.getenv("CI", "false").lower() == "true"
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
@@ -80,7 +82,26 @@ def load_model_and_vectorizer(model_name, model_version, vectorizer_path):
     return model, vectorizer
 
 # Initialize the model and vectorizer
-model, vectorizer = load_model_and_vectorizer("lgbm_model_V1", "1", "./tfidf_vectorizer_3000.pkl")  # Update paths and versions as needed
+model = None
+vectorizer = None  # Update paths and versions as needed
+
+def get_model_and_vectorizer():
+    global model, vectorizer
+
+    if model is None or vectorizer is None:
+        if IS_CI:
+            raise RuntimeError("Model loading skipped in CI environment")
+
+        model_name = "lgbm_model_V1"
+        model_version = "1"
+        vectorizer_path = "./tfidf_vectorizer_3000.pkl"
+
+        model, vectorizer = load_model_and_vectorizer(
+            model_name, model_version, vectorizer_path
+        )
+
+    return model, vectorizer
+
 
 @app.route('/')
 def home():
@@ -102,6 +123,7 @@ def predict_with_timestamps():
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
         
         # Transform
+        model, vectorizer = get_model_and_vectorizer()
         transformed_comments = vectorizer.transform(preprocessed_comments)
         
         # Predict
@@ -129,6 +151,7 @@ def predict():
     try:
         preprocessed_comments = [preprocess_comment(comment) for comment in comments]
         
+        model, vectorizer = get_model_and_vectorizer()
         transformed_comments = vectorizer.transform(preprocessed_comments)
         
         # CHANGE 3: Pass sparse matrix directly here as well
