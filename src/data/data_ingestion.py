@@ -95,7 +95,7 @@ def main():
         test_size = params['data_ingestion']['test_size']
         
         # Load data from the specified URL
-        df = pd.read_csv(r"D:\Projects\MLOps-Project\Real-Time-YouTube-Comment-Analysis\dataset\Data_Cleaning_YT.csv")
+        df = pd.read_csv(r"D:\Projects\MLOps-Project\balanced_youtube_comments_generated.csv")
         
         # Preprocess the data
         final_df = preprocess_data(df)
